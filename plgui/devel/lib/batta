@@ -1,0 +1,114 @@
+::::::::::::::
+batta_4_select.m
+::::::::::::::
+function b_dis = batta_4_select(x, cn, mx)
+
+% BATTA_4_SELECT   Bhattacharyya distance given training feature matrix.
+% ***************************************************************************
+% Inputs:
+%    X,  training feature matrix, each row is an ovservation of a feature 
+%        vector.
+%    CN, class number.
+%    MX, training data size in each class.
+% Outputs:
+%    B_DIS, Distance vector, each element is the distance of a feature. 
+% Usage:
+%    b_dis = batta_4_select(x, cn, mx);
+%    b_dis = batta_4_select(x, cn);
+% Defaults:
+%    If no MX as input, assume equal data size of all classes.
+% Functions: 
+%    Batta, Var.        
+
+% Created:       8/30/94, Xiaoou Tang
+% Last modified: 2/25/95, X. Tang 
+%***************************************************************************
+
+[mall, nall] = size(x);
+if nargin == 3
+   if length(mx) ~= cn | sum(mx) ~= mall,
+      error('Input data matrix does not match its class size discription')
+   end
+   mx = mx(mx~=0);
+   cn = length(mx);
+   if cn<2|sum(mx)<cn*3
+     cn
+     mx
+     disp('left over training data too sparse')
+   end
+   mx = cumsum(mx);
+   mx = [0;mx(:)];
+elseif nargin == 2
+   if rem(mall,cn) ~= 0, 
+      error('Invalid input') 
+   end
+   mx = ones(1,cn)*mall/cn;
+   mx = cumsum(mx);
+   mx = [0;mx(:)];
+else
+   error('Wrong input arguement number');
+end
+
+var_mat = zeros(cn, nall);
+mean_mat = zeros(cn, nall);
+for i = 1:cn
+%   xclass = x(i*mx+1:i*mx+mx, :);
+   xclass = x(mx(i)+1:mx(i+1), :);
+   if min(size(xclass)) == 1
+      var_mat(i,:) = zeros(size(xclass));
+      mean_mat(i,:) = xclass;
+   else   
+      var_mat(i,:) = var(xclass);
+      mean_mat(i,:) = mean(xclass);
+   end 
+end
+var_mat(var_mat==0) = var_mat(var_mat==0)+eps;
+b_dis = batta(var_mat, mean_mat);
+
+
+
+
+
+
+
+
+::::::::::::::
+batta.m
+::::::::::::::
+function [b_dis] = batta(c, m);
+% BATTA   Bhattacharyya distance given class means and variances
+% ***************************************************************************
+% Inputs:
+%    C,  Variance matrix, col # = feature #; row # = class #.
+%    M,  Mean matrix,  col # = feature #; row # = class #. 
+% Outputs:
+%    B_DIS, Distance vector, each element is the distance of a feature. 
+% Usage:
+%    b_dis = batta(c, m);
+% Defaults:
+% Functions:         
+
+%  Notes: 
+%     There are two way to average multiclass distance . One is simply average
+%     the Bhatta distance. The other is to average the error bound, that is to 
+%     average exp(-B). We use the later one.
+
+% Created:       8/24/94, Xiaoou Tang
+% Last modified: 2/25/95, X. Tang
+%***************************************************************************
+
+[clus, dim] = size(c);
+b_dis = zeros(1, dim);
+for k = 1:dim                % feature dimension #
+    n = 1;
+    for i = 1:clus-1         % class i
+        for j = i+1:clus     % class j
+            b(n) = 1/4*log((c(i,k)/c(j,k)+c(j,k)/c(i,k)+2)/4)+1/4*(m(i,k)-m(j,k))^2/(c(i,k)+c(j,k));        % kth dimension's class i and j distance
+            n = n+1;
+        end
+    end
+    size(b);
+%    b_dis(k) = sum(b)/(n-1); 
+    b_dis(k) = sum(exp(-b));
+end
+b_dis = ones(size(b_dis))./(b_dis+eps);   % inverse of the error bound

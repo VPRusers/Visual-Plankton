@@ -1,0 +1,2 @@
+%mat1=[];for j=0:999,if j<10,s=' ';else,s='';end;mat1=[mat1;'VPR'num2str(j) s];end%for 99 vpr tows
+mat1=[];for j=0:999,if j<10,s='  ';elseif j>=10&j<100,s=' ';else, s='';end;mat1=[mat1;'VPR' num2str(j) s];end%for 999 vpr tows

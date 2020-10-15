@@ -1,0 +1,9 @@
+#! /bin/csh -f
+# takes command line arguments and echoes them to a program
+# let's say myfortranprog asks for 2 input lines
+./mgridder << EOF
+$1
+$2
+$3
+$4
+EOF

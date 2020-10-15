@@ -1,0 +1,38 @@
+clear all;
+figure(1);clf;
+x=-3:.1:3;
+z=exp(-x.^2)'*exp(-x.^2);
+m=moviein(21);
+%for i=-1:.1:1,
+for i=1:1,
+  surfl(z*i,'light');shading interp;axis off;
+  colormap([.6 .6 1]);
+  h=get(gca,'children');
+  set(gcf,'renderer','opengl');
+  set(h(1),'style','local');
+  set(h(1),'position',[-1 -1 .35]);
+  %set(h(2),'facecolor','texturemap');
+  set(gca,'zlim',[-1.2 1.2]);
+  drawnow;
+  %pause;
+  %j=round(i*10+11);
+  %m(:,j) = getframe;
+  %pause;
+end;
+%movie(m,1);
+for i=-10:5:90;
+   set(h(1),'position',[i -10 .35]);
+   drawnow;
+end;
+for i=-10:5:90;
+   set(h(1),'position',[90 i .35]);
+   drawnow;
+end;
+for i=90:-5:-10;
+   set(h(1),'position',[i 90 .35]);
+   drawnow;
+end;
+for i=90:-5:-10;
+   set(h(1),'position',[-10 i .35]);
+   drawnow;
+end;

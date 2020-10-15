@@ -1,0 +1,6 @@
+function [ms] = tc2ms(tc)
+%converts timecode to milliseconds
+%input is a row vector or matrix containing timecode i.e. 
+%ms=[hour,min,sec,frame]
+
+ms=tc(:,1)*3600000+tc(:,2)*60000+tc(:,3)*1000+tc(:,4)*1000/30;

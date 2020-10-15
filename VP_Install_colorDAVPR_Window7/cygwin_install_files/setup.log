@@ -1,0 +1,46 @@
+2017/07/07 14:29:23 Starting cygwin install
+Current Directory: C:\Users\drewhirzel\Downloads\VP_Install_colorDAVPR_Window7\cygwin_install_files
+source: download
+Selected local directory: C:\Users\drewhirzel\Downloads\VP_Install_colorDAVPR_Window7\cygwin_install_files
+net: Direct
+site: http://cygwin.mirror.constant.com/
+mbox note: Unable to get setup.ini from http://cygwin.mirror.constant.com/
+site: http://cygwin.mirror.constant.com/
+2017/07/07 14:29:46 Ending cygwin install
+2017/07/07 14:30:41 Starting cygwin install
+Current Directory: C:\Users\drewhirzel\Downloads\VP_Install_colorDAVPR_Window7\cygwin_install_files
+source: download
+Selected local directory: C:\Users\drewhirzel\Downloads\VP_Install_colorDAVPR_Window7\cygwin_install_files
+net: Direct
+site: http://cygwin.mirror.constant.com/
+mbox note: Unable to get setup.ini from http://cygwin.mirror.constant.com/
+site: http://cygwin.mirror.constant.com/
+mbox note: Unable to get setup.ini from http://cygwin.mirror.constant.com/
+site: http://cygwin.mirror.constant.com/
+mbox note: Unable to get setup.ini from http://cygwin.mirror.constant.com/
+site: http://cygwin.mirror.constant.com/
+2017/07/07 14:31:18 Ending cygwin install
+2018/05/24 15:18:38 Starting cygwin install
+Current Directory: C:\Users\drewhirzel\Documents\PhD\DAVPR and VP Project\Archived Files\VP_Install_colorDAVPR_Window7\cygwin_install_files
+source: download
+Selected local directory: C:\Users\drewhirzel\Documents\PhD\DAVPR and VP Project\Archived Files\VP_Install_colorDAVPR_Window7\cygwin_install_files
+net: Direct
+site: http://cygwin.mirror.constant.com/
+mbox note: Unable to get setup.ini from http://cygwin.mirror.constant.com/
+site: http://cygwin.mirrors.hoobly.com/
+mbox note: Unable to get setup.ini from http://cygwin.mirrors.hoobly.com/
+site: http://mirrors.koehn.com/cygwin/cygwin-ftp/
+mbox note: Unable to get setup.ini from http://mirrors.koehn.com/cygwin/cygwin-ftp/
+site: http://cygwin.mirror.uk.sargasso.net/
+mbox note: Unable to get setup.ini from http://cygwin.mirror.uk.sargasso.net/
+site: http://mirror.rit.edu/cygwin/
+mbox note: Unable to get setup.ini from http://mirror.rit.edu/cygwin/
+site: http://mirror.rit.edu/cygwin/
+2018/05/24 15:19:37 Ending cygwin install
+2018/08/08 12:58:42 Starting cygwin install
+Current Directory: C:\Users\drewhirzel\Documents\PhD\DAVPR and VP Project\Archived Files\VP_Install_colorDAVPR_Window7\cygwin_install_files
+source: download
+Selected local directory: C:\Users\drewhirzel\Documents\PhD\DAVPR and VP Project\Archived Files\VP_Install_colorDAVPR_Window7\cygwin_install_files
+net: IE5
+site: (null)
+2018/08/08 12:58:57 Ending cygwin install

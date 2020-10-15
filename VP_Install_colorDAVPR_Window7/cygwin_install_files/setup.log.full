@@ -1,0 +1,8 @@
+2018/08/08 12:58:42 Starting cygwin install
+Current Directory: C:\Users\drewhirzel\Documents\PhD\DAVPR and VP Project\Archived Files\VP_Install_colorDAVPR_Window7\cygwin_install_files
+source: download
+Selected local directory: C:\Users\drewhirzel\Documents\PhD\DAVPR and VP Project\Archived Files\VP_Install_colorDAVPR_Window7\cygwin_install_files
+net: IE5
+get_url_to_string http://sources.redhat.com/cygwin/mirrors.lst
+site: (null)
+2018/08/08 12:58:57 Ending cygwin install

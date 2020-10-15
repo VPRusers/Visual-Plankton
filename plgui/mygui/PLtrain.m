@@ -1,0 +1,249 @@
+function PLtrain
+
+global hrow tabledata hradio prec hmmrois
+
+s=get(gcbo,'string');close(gcbf)
+%s='c:\data';
+eval(['disk=str2mat(''' strrep(s,' ',''',''') ''');']);
+fs=filesep;
+numtrrois=[];
+pathtrrois='';
+taxontrrois='';
+for j1=1:size(disk,1),
+    path1=deblank(disk(j1,:));
+    fsindx=find(path1==fs);
+    if(length(fsindx)==2),
+        cruises=str2mat('.','..',[path1(fsindx(2)+1:length(path1))]);
+        path1=path1(1:fsindx(2)-1);
+    else
+        cruises=dir(path1);
+        cruises=str2mat(cruises.name);
+    end
+    if size(cruises,1)>2,
+        for j2=3:size(cruises,1),
+            cruise=deblank(cruises(j2,:));
+            path2=[path1 fs cruise fs 'trrois'];
+            tows=dir([path2 fs 'vpr*']);
+            tows=str2mat(tows.name);
+            if ~isempty(tows),
+                tows=sortrows(tows);
+                for j3=1:size(tows,1),
+                    tow=deblank(tows(j3,:));
+                    path3=[path2 fs tow];
+                    days=dir([path3 fs 'd*']);
+                    days=str2mat(days.name);
+                    if ~isempty(days),
+                        days=sortrows(days);
+                        for j4=1:size(days,1),
+                            day=deblank(days(j4,:));
+                            path4=[path3 fs day];
+                            hours=dir([path4 fs 'h*']);
+                            hours=str2mat(hours.name);
+                            if ~isempty(hours),
+                                hours=sortrows(hours);
+                                hours(hours=='H')='h';%needs to be lower case for matching in PLextrain
+                                for j5=1:size(hours,1),
+                                    hour=deblank(hours(j5,:));
+                                    if length(hour)==3,
+                                        path5=[path4 fs hour];
+                                        taxa=dir([path5 fs '*.']);
+                                        taxa=str2mat(taxa.name);
+                                        if size(taxa,1)>2,
+                                            for j6=3:size(taxa,1),
+                                                taxon=deblank(taxa(j6,:));
+                                                path6=[path5 fs taxon];
+                                                numtifs=size(dir([path6 fs '*.tif']),1);
+                                                if numtifs>0,
+                                                    numtrrois=[numtrrois;numtifs];
+                                                    pathtrrois=strvcat(pathtrrois,path5);
+                                                    taxontrrois=strvcat(taxontrrois,taxon);
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+% now we have lists of paths, number of trrois, and taxa where there are sorted 
+% trrois on the specified disks
+% next need to display these data in tablular form
+% create figure window showing table with hourly paths that contain trrois on y-axis,
+% taxa names on x-axis, and numbers of trrois as the table entries.
+
+% loop through these arrays to get y and x labels and table entries.
+ytext(1,:)=pathtrrois(1,:);
+xtext(1,:)=taxontrrois(1,:);
+tabledata(1,1)=numtrrois(1);
+numrows=1;
+numcolumns=1;
+for j=2:size(pathtrrois,1),
+    if ~strcmp(pathtrrois(j,:),pathtrrois(j-1,:)),
+        numrows=numrows+1;
+        ytext(numrows,:)=pathtrrois(j,:);
+    end
+    taxonsearch=strmatch(taxontrrois(j,:),xtext,'exact');
+    if isempty(taxonsearch),
+        numcolumns=numcolumns+1;
+        xtext(numcolumns,:)=taxontrrois(j,:);
+        tabledata(numrows,numcolumns)=numtrrois(j);
+    else
+        tabledata(numrows,taxonsearch)=numtrrois(j);
+    end
+end
+
+%now have arrays for y and x plus table entries
+%need to alphabetize the columns
+[xtext,idx]=sortrows(xtext);
+tabledata=tabledata(:,idx);
+ytext=str2mat(ytext,'Total Training ROIs','Use for Training');
+%total=sum(tabledata);
+total=zeros(1,size(tabledata,2));
+used=zeros(1,size(tabledata,2));
+% used=(total>=100).*total;
+% used(used>200)=200;
+tabledata=[tabledata;total;used];
+
+prec=['%' int2str(size(int2str(max(sum(tabledata))),2)+1) '.0f'];
+
+if size(num2str(tabledata,prec),2) > 80,
+    fontsize=8;
+else
+    fontsize=10;
+end
+
+%the following changes underscore character so it isnt interpreted as TeX subscript character
+%xtext=char(strrep(cellstr(xtext),'_',' '));
+%above not needed...just use: set(texthandle,'interpreter','none');
+
+%create figure to display table
+redgreenblue=[0.2157 .6353 .6353]*1.2;%let's make it lighter for this figure
+
+h0 = figure('Units','normalized', ...
+	'Color',[redgreenblue], ...
+	'MenuBar','none', ...
+	'Name','VPR:  Training the Computer', ...
+	'NumberTitle','off', ...
+	'PaperPosition',[18 180 576 432], ...
+   'PaperUnits','points', ...
+   'Position',[.02    0.02    0.95    0.95], ...
+	'Tag','PLextractFig', ...
+	'ToolBar','none', ...
+    'visible','off');
+ha = axes('position',[0 0 1 1],'visible','off');
+
+ytextboxwidth=6*size(ytext,2);if ytextboxwidth>275,ytextboxwidth=275;end;
+ytextboxheight=14*size(ytext,1);
+hytext=uicontrol('style','listbox', ...
+    'string',ytext, ...
+    'units','points', ...
+    'position',[20 50 ytextboxwidth ytextboxheight], ...
+    'min',1,'max',size(ytext,1), ...
+    'callback',['global hrow tabledata hradio prec hmmrois;',...
+        'ytv=get(gcbo,''value''); ytv=ytv(ytv<length(hrow)-1);',...
+        'if ~isempty(ytv),',...
+           'total=zeros(1,size(tabledata,2));',...
+           'for j=1:length(hradio),',...
+                'set(hradio(j),''value'',0);'...
+           'end;',...
+           'for j=1:length(ytv),',...
+               'set(hradio(ytv(j)),''value'',1);',...
+               'total=total+str2num(get(hrow(ytv(j)),''string''));',...
+           'end;',...
+           'leading_blanks=blanks(length(int2str(sum(tabledata(1:end-2,1))))-length(int2str(total(1))));',...
+           'set(hrow(length(hrow)-1),''string'',[leading_blanks num2str(total,prec)]);',...
+           'yestaxa=cell2mat(flipud(get(findobj(''tag'',''hradiox''),''value'')))'';'...
+           'total=total.*yestaxa;'...
+           'mmrois=str2num(get(hmmrois,''string''));',...
+           'used=(total>=mmrois(1)).*total; used(used>mmrois(2))=mmrois(2);',...
+           'leading_blanks=blanks(length(int2str(sum(tabledata(1:end-2,1))))-length(int2str(used(1))));',...
+           'set(hrow(length(hrow)),''string'',[leading_blanks num2str(used,prec)]);',...
+        'end;'], ...
+    'fontsize',10, ...
+    'tag','ytext', ...
+    'tooltipstring',['Select folder(s) using left mouse button.' char(10) ...
+       '(Select multiple folders using control key + left mouse button)' char(10) ...
+       '"Total Training ROIs" and "Used for Training" change automatically.' char(10) char(10)...
+       '(Note that "Total Training ROIs" will not necessarily be the same as "Total Processed"' char(10) ...
+       'since some trrois may be rejected by the processing algorithm, e.g., object too small.' char(10) ...
+       'All trrois larger than 300kb are automatically rejected,' char(10) ...
+       'and "Used for Training" then may also change.)'], ...
+    'horizontalalignment','left');
+xtextboxposition=[ytextboxwidth+30 ytextboxheight+60];
+if fontsize==10, 
+    tabledatawidth=6.5*size(num2str(tabledata,prec),2);
+else
+    tabledatawidth=4.9*size(num2str(tabledata,prec),2);
+end
+
+xtextposx=xtextboxposition(1)+5+[0 (1:size(xtext,1)-1)*tabledatawidth/size(xtext,1)*.95];
+xtextposy=xtextboxposition(2)*ones(1,size(xtext,1));
+th=text(xtextposx,xtextposy+10,xtext,'interpreter','none','tag','xtext','verticalalignment','top','rotation',60,'units','points','fontname','helvetica','fontweight','bold','fontsize',fontsize);
+
+for j=1:size(xtext,1),
+    hradiox(j)=uicontrol('style','radiobutton','units','points',...
+        'position',[xtextposx(j) xtextposy(j)-10 10 10], ...
+        'backgroundcolor',redgreenblue,'tag','hradiox','value',1,...
+        'tooltipstring','Clear to exclude taxon',...
+    'callback',['global hrow tabledata prec;mmrois=str2num(get(findobj(''tag'',''minmaxrois''),''string''));'...
+        'total=str2num(get(hrow(length(hrow)-1),''string''));'...
+        'yestaxa=cell2mat(flipud(get(findobj(''tag'',''hradiox''),''value'')))'';'...
+        'total=total.*yestaxa;'...
+        'used=total;used(used<mmrois(1))=0;used(used>mmrois(2))=mmrois(2);'...
+        'leading_blanks=blanks(length(int2str(sum(tabledata(1:end-2,1))))-length(int2str(used(1))));',...
+        'set(hrow(length(hrow)),''string'',[leading_blanks num2str(used,prec)]);']);
+end
+for j=1:size(ytext,1),
+    leading_blanks=blanks(length(int2str(sum(tabledata(1:end-2,1))))-length(int2str(tabledata(j,1))));
+    hrow(j)=uicontrol('style','edit','units','points',...
+        'position',[ytextboxwidth+30 50+ytextboxheight-j*12-1 tabledatawidth 12.5],...
+        'string',[leading_blanks num2str(tabledata(j,:),prec)],...
+        'horizontalalignment','left','fontname','courier new','fontsize',fontsize);
+end;
+for j=1:size(ytext,1)-2,
+    hradio(j)=uicontrol('style','radiobutton','units','points','position',[ytextboxwidth+19.5 50+ytextboxheight-j*12-1 10 10], ...
+        'backgroundcolor',redgreenblue,'enable','inactive','tag',['hradio' num2str(j)],'value',0,'tooltipstring','Click folder to left.');
+end
+lastxtextbox=get(th(size(th,1)),'extent');
+figwidth=lastxtextbox(1)+lastxtextbox(3)+10;
+xtextbox=[];
+for j=1:size(th,1),xtextbox=[xtextbox;get(th(j),'extent')];end;
+y=max(xtextbox);
+figheight=y(2)+y(4)+10;
+u=get(0,'units');set(0,'units','points');ss=get(0,'screensize');set(0,'units',u);
+set(h0,'units','points','position',[ss(3)-figwidth-20 ss(4)-figheight-20 figwidth figheight],'visible','on');
+
+hmmrois=uicontrol('style','edit', ...
+    'units','points', ...
+    'position',[40 15 35 23], ...
+    'min',1, ...
+    'max',3, ...
+    'string',['100';'200'], ...
+    'horizontalalignment','left', ...
+    'tooltipstring', ['Enter minimum and maximum number of training ROIs per taxon to be used in building the classifier.',...
+        char(10) 'Do not press enter.  Click in Classifier Name Box instead'], ...
+    'tag','minmaxrois',...
+    'callback',['global hrow tabledata prec;mmrois=str2num(get(gcbo,''string''));'...
+        'total=str2num(get(hrow(length(hrow)-1),''string''));'...
+        'yestaxa=cell2mat(flipud(get(findobj(''tag'',''hradiox''),''value'')))'';'...
+        'total=total.*yestaxa;'...
+        'used=total;used(used<mmrois(1))=0;used(used>mmrois(2))=mmrois(2);'...
+        'leading_blanks=blanks(length(int2str(sum(tabledata(1:end-2,1))))-length(int2str(used(1))));',...
+        'set(hrow(length(hrow)),''string'',[leading_blanks num2str(used,prec)]);']);
+
+uicontrol('style','text','units','points','position',[20 25 15 12],'string','Min','backgroundcolor',redgreenblue,'tooltipstring','Minimum number of training rois per taxon used to build classifier');
+uicontrol('style','text','units','points','position',[20 15 15 12],'string','Max','backgroundcolor',redgreenblue,'tooltipstring','Maximum number of training rois per taxon used to build classifier');
+uicontrol('style','pushbutton','units','points','position',[260 15 25 20],'string','Exit','backgroundcolor',redgreenblue,'callback','close(gcbf)','fontweight','bold');
+uicontrol('style','text','units','points','position',[20 ytextboxheight+50 ytextboxwidth 15],'string','Training ROIs Folders','fontsize',fontsize,'fontweight','bold','backgroundcolor',redgreenblue);
+uicontrol('style','pushbutton','units','points','position',[ 170 15 75 20],'string','Build Classifier','backgroundcolor',redgreenblue,'callback','PLextrain','fontweight','bold',...
+    'tooltipstring',['First select training folders , taxa, and min max number of rois to use for each taxon,' char(10) 'give the classifier a name, and' char(10) 'then press this button to build the classifier']);
+uicontrol('style','text','units','points','position',[80 30 75 12],'string','Classifier Name','backgroundcolor',redgreenblue,'tooltipstring','Name the classifier','fontweight','bold');
+uicontrol('style','edit','units','points','position',[80 15 75 15],'tag','classifierID','string','','tooltipstring','Name the classifier','horizontalalignment','left');
+
+
