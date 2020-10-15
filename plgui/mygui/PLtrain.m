@@ -3,7 +3,7 @@ function PLtrain
 global hrow tabledata hradio prec hmmrois
 
 s=get(gcbo,'string');close(gcbf)
-%s='c:\data';
+s='c:\data';
 eval(['disk=str2mat(''' strrep(s,' ',''',''') ''');']);
 fs=filesep;
 numtrrois=[];

@@ -1,4 +1,5 @@
-function [AlphaY, SVs, Bias, Parameters, nSV, nLabel] = SVMTrain(Samples, Labels, Parameters, Weight)
+%function [AlphaY, SVs, Bias, Parameters, nSV, nLabel] = SVMTrain(Samples, Labels, Parameters, Weight)
+function[svm_model] = SVMTrain(Labels, Samples, Parameters)
 % Usages:
 % [AlphaY, SVs, Bias, Parameters, nSV, nLabel] = SVMTrain(Samples, Labels)
 % [AlphaY, SVs, Bias, Parameters, nSV, nLabel] = SVMTrain(Samples, Labels, Parameters)
@@ -95,25 +96,27 @@ if (nargin >= 3)
     end
 end
 
-[spM spN]=size(Samples);
-[lbM lbN]=size(Labels);
-if lbM ~= 1
-   disp(' Error: ''Labels'' should be a row vector.');
-   return
-end
-if spN ~= lbN
-   disp(' Error: the number of training samples is different from that of their labels.');
-   return
-end
+% [spM spN]=size(Samples);
+% [lbM lbN]=size(Labels);
+% if lbM ~= 1
+%    disp(' Error: ''Labels'' should be a row vector.');
+%    return
+% end
+% if spN ~= lbN
+%    disp(' Error: the number of training samples is different from that of their labels.');
+%    return
+% end
 
 % call the mex file
 if (nargin == 2)
-    [AlphaY, SVs, Bias, Parameters, nSV, nLabel] = mexSVMTrain(Samples, Labels);
+     
 elseif (nargin == 3)
-    [AlphaY, SVs, Bias, Parameters, nSV, nLabel] = mexSVMTrain(Samples, Labels, Parameters);
+    %[AlphaY, SVs, Bias, Parameters, nSV, nLabel] = svmtrain(Samples, Labels, Parameters);
+    %[AlphaY, SVs, Bias, Parameters, nSV, nLabel] = svmtrain(Labels, Samples, Parameters);
+    svm_model = mex_svmtrain(Labels, Samples, Parameters);
 elseif (nargin == 4)
-    [AlphaY, SVs, Bias, Parameters, nSV, nLabel] = mexSVMTrain(Samples, Labels, Parameters, Weight);
+    %[AlphaY, SVs, Bias, Parameters, nSV, nLabel] = svmtrain(Samples, Labels, Parameters, Weight);
+    svm_model = mex_svmtrain(Labels, Samples, Parameters);
 end
-
 
  

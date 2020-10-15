@@ -1,4 +1,4 @@
-function  [Labels, DecisionValue]= SVMClass(Samples, AlphaY, SVs, Bias, Parameters, nSV, nLabel)
+function  [Label, DecisionValue]= SVMClass(Samples, svm_model)
 % Usages:
 %  [Labels, DecisionValue]= SVMClass(Samples, AlphaY, SVs, Bias);
 %  [Labels, DecisionValue]= SVMClass(Samples, AlphaY, SVs, Bias, Parameters);
@@ -62,69 +62,77 @@ function  [Labels, DecisionValue]= SVMClass(Samples, AlphaY, SVs, Bias, Paramete
 %
 % By Junshui Ma, and Yi Zhao (02/15/2002)
 %
-if (nargin < 4 | nargin > 7)
-   disp(' Incorrect number of input variables.');
-   help SVMClass;
-   return
+% if (nargin < 4 | nargin > 7)
+%    disp(' Incorrect number of input variables.');
+%    help SVMClass;
+%    return
+% end
+% 
+% if (nargin >= 5) 
+%     [prM prN]= size(Parameters);
+%     if (prM ~= 1 & prN~=1)
+%         disp(' Error: ''Parameters'' should be a row vector.');
+%         return
+%     elseif (prM~= 1)
+%         Parameters = Parameters';
+%         [prM prN]= size(Parameters);
+%     end
+%     if (Parameters(1)>3) & (Parameters(1) < 0)
+%         disp(' Error: this program only supports 4 types of kernel functions.');
+%         return
+%     end
+%     if (prN >=8)
+%         if (Parameters(8)>4) & (Parameters(8) <0)
+%            disp(' Error: this program only supports 5 types of SVMs.');
+%            return
+%         end
+%     end
+% end
+% 
+% [alM alN] = size(AlphaY);
+% if (nargin <= 5)  
+%     [r c] = size(Bias);
+%     if (r~=1 | c~=1)
+%         disp(' Error: Your SVM classifier seems a multiclass classifier. However, you need to input ''nSV'' and ''nLabel'' to support multiclass problem.');
+%         return
+%     end    
+%     if (alM > 1)
+%         disp(' Error: Your SVM classifier seems a multiclass classifier. However, you need to input ''nSV'' and ''nLabel'' to support multiclass problem.');
+%         return
+%     end    
+% end
+
+%[spM spN]=size(Samples);
+%[svM svN]=size(SVs);
+
+% if svM ~= spM
+%    disp(' Error: ''SVs'' should have the same feature dimension as ''Samples''.');
+%    return;
+% end
+% 
+% if svN ~= alN
+%    disp(' Error: number of ''SVs'' should be the same as the colmun number of ''AlphaY''.');
+%    return;
+% end
+
+% % call the mex file
+% if (nargin == 4)
+%     %[ClassRate, DecisionValue, Ns, ConfMatrix, Labels]= mexSVMClass(Samples, FakeLabels, AlphaY, SVs, Bias);
+%     
+% elseif (nargin == 5)
+%     %[ClassRate, DecisionValue, Ns, ConfMatrix, Labels]= mexSVMClass(Samples, FakeLabels, AlphaY, SVs, Bias,Parameters);
+%     
+% elseif (nargin == 7)
+%     %[ClassRate, DecisionValue, Ns, ConfMatrix, Labels]= mexSVMClass(Samples, FakeLabels, AlphaY, SVs, Bias,Parameters, nSV, nLabel);
+%     
+
+%Modified by KS
+[sample_rows,sample_cols] = size(Samples);
+FakeLabels = ones(1,sample_rows)';
+
+[Label, Accuracy, DecisionValue] = svmpredict(FakeLabels, Samples, svm_model);
 end
 
-if (nargin >= 5) 
-    [prM prN]= size(Parameters);
-    if (prM ~= 1 & prN~=1)
-        disp(' Error: ''Parameters'' should be a row vector.');
-        return
-    elseif (prM~= 1)
-        Parameters = Parameters';
-        [prM prN]= size(Parameters);
-    end
-    if (Parameters(1)>3) & (Parameters(1) < 0)
-        disp(' Error: this program only supports 4 types of kernel functions.');
-        return
-    end
-    if (prN >=8)
-        if (Parameters(8)>4) & (Parameters(8) <0)
-           disp(' Error: this program only supports 5 types of SVMs.');
-           return
-        end
-    end
-end
 
-[alM alN] = size(AlphaY);
-if (nargin <= 5)  
-    [r c] = size(Bias);
-    if (r~=1 | c~=1)
-        disp(' Error: Your SVM classifier seems a multiclass classifier. However, you need to input ''nSV'' and ''nLabel'' to support multiclass problem.');
-        return
-    end    
-    if (alM > 1)
-        disp(' Error: Your SVM classifier seems a multiclass classifier. However, you need to input ''nSV'' and ''nLabel'' to support multiclass problem.');
-        return
-    end    
-end
-
-[spM spN]=size(Samples);
-[svM svN]=size(SVs);
-
-if svM ~= spM
-   disp(' Error: ''SVs'' should have the same feature dimension as ''Samples''.');
-   return;
-end
-
-if svN ~= alN
-   disp(' Error: number of ''SVs'' should be the same as the colmun number of ''AlphaY''.');
-   return;
-end
-
-
-FakeLabels = ones(1,spN); % this is a set of phony labels to feed the mex file.
-
-% call the mex file
-if (nargin == 4)
-    [ClassRate, DecisionValue, Ns, ConfMatrix, Labels]= mexSVMClass(Samples, FakeLabels, AlphaY, SVs, Bias);
-elseif (nargin == 5)
-    [ClassRate, DecisionValue, Ns, ConfMatrix, Labels]= mexSVMClass(Samples, FakeLabels, AlphaY, SVs, Bias,Parameters);
-elseif (nargin == 7)
-    [ClassRate, DecisionValue, Ns, ConfMatrix, Labels]= mexSVMClass(Samples, FakeLabels, AlphaY, SVs, Bias,Parameters, nSV, nLabel);
-end
 
  

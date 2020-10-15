@@ -7,8 +7,8 @@ function extridsize(disc,cruise,tow,day,hour)
 % input data base 
 % input data base 
 %h=gcbf;
+%Test comment change
 global PASS_ID;
-
 if nargin>0,
     sthour=hour;
     endhour=hour;
@@ -28,8 +28,9 @@ if strcmp(machinetype(1:3), 'SGI');
   comd_str = ' !../sbin/pbinsgi ';
 elseif strcmp(machinetype, 'SOL2');
   comd_str = ' !../sbin/pbin ';
-elseif strcmp(machinetype, 'PCWIN');
-  comd_str = ['!..' filesep 'sbin' filesep 'pbin_dos '];
+elseif strcmp(machinetype, 'PCWIN64');
+  comd_str = ['!..' filesep 'sbin' filesep 'pbin_dos_ks '];
+  
 else
   disp(['wrong type of operating system']);
 end 
@@ -40,6 +41,8 @@ globvar('AREA_THRESH', 10);
 globvar('GRA_LEN', 160);
 globvar('CONT_LEN', 256);
 globvar('GEO_LEN', 29);  
+
+
 globvar('COO_LEN', 64);
 global AREA_THRESH GRA_LEN CONT_LEN GEO_LEN COO_LEN;
 small_count = [];
@@ -59,6 +62,7 @@ for hour = sthour:endhour 		% hour loop
   [s,taxafiles] = dos(['dir /B /ON ', trrois_dir, '*.']);
 %  taxafiles = dosdir(trrois_dir);
   pathtest=['The system cannot find the path specified.'];
+  
 %	if (pathtest == taxafiles(1:length(pathtest)))
 %		fprintf('NO Rois to Process.  Done.\n');
 %		break;
@@ -93,15 +97,23 @@ for hour = sthour:endhour 		% hour loop
         if PASS_ID == 1
             oim=imread(imfile);
             gim8=im2uint8(rgb2gray(oim));
-            ramfile=['E:\' basename(imfile)];
+            ramfile=['C:\ramfile\' basename(imfile)]; %Modified by E. Chisholm (18-4-2019)
             imwrite(gim8,ramfile);
+            
+             cd C:/VPR_PROJECT/plgui/sbin
+            %keyboard
             eval([comd_str, ramfile])
             % eval([comd_str,imfile]);
             %  comd_str = ['-granul -outline ',imfile];
             %  comd_str = ['-granul -outline -bmoments ',imfile];
             %  plpmex(comd_str);
+            
+            
+            %keyboard
+            
             [gra, cont] = readvector(rootname(basename(imfile)));
             fco = coocfeat(ramfile);
+             
             eval(['delete ' ramfile]);
             if length(cont) < AREA_THRESH         % if object too small, discard
                 disp(['object too small']); small_count = small_count+1
@@ -117,6 +129,7 @@ for hour = sthour:endhour 		% hour loop
                 %            [v1,v2,v3,v4] = readgeofea(geofile,cont,2);         % ** add gray scale features
                 fgeo = [v1 v2 v3(1:4)/v3(5) v3]; % v4 ];
                 fmea = [fgeo(1:2) fgeo(25:29)];
+                
                 small_flag = 0;
             end					% end if size
         elseif PASS_ID == 2
@@ -140,11 +153,14 @@ for hour = sthour:endhour 		% hour loop
           fprintf(fid_nam, '%s\n', imfile);
           fprintf(fid_mea, '%9.4f %9.4f %9.4f %9.4f %9.4f %9.4f %9.4f\n', ...
                         fmea);
-          fwrite(fid_gra, fgra, 'float');
+          fwrite(fid_gra, fgra, 'float'); 
           fwrite(fid_dst, fdst, 'float');
           fwrite(fid_geo, fgeo, 'float');
           fwrite(fid_coo, fco, 'float');
         end					% end if small_flag
+      
+      %keyboard
+        
       end					% end imnum
       fclose(fid_nam);				
       fclose(fid_mea);
@@ -157,7 +173,7 @@ for hour = sthour:endhour 		% hour loop
     else
       fprintf('There is no %s data in Tow %d Day %s Hour %d\n', ...
                taxastr, tow, day, hour);  
+        
     end					% end if there is this taxa data in hour
   end					% end of taxa loop
 end					% end of hour loop
-

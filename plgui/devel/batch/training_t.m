@@ -4,6 +4,8 @@ function [t1, t2, t3, t4] = training_t(cl_method, tr_feature, tnet, tp, mx, pn)
 
 % created, 12/27/95, Xiaoou Tang
 
+%keyboard
+
 if cl_method == 1
   [t1, t2, t3, t4] = cov_mean_extr(tr_feature, mx); 
                      % [W_pos,W_inv,means,dim]

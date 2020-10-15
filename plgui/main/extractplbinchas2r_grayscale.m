@@ -41,8 +41,8 @@ elseif strcmp(machinetype, 'SOL2');
     comd_str = ' !../sbin/pbin ';
 elseif strcmp(machinetype, 'SUN4');
     comd_str = ' !../sbin/pbin ';
-elseif strcmp(machinetype, 'PCWIN');
-    comd_str = ['! ..',filesep,'sbin',filesep,'pbin_dos '];
+elseif strcmp(machinetype, 'PCWIN64');
+    comd_str = ['! ..',filesep,'sbin',filesep,'pbin_dos_ks '];
 else
     disp(['wrong type of operating system']);
 end 
@@ -68,6 +68,7 @@ for j = 1:imnum, 			% foreach image and template file
     end 
     if PASS_ID == 1 | PASS_ID == 3		% do extraction
         eval([comd_str, imfile])
+        
         %		comd_str = ['-granul -outline ',imfile];
         %		plpmex(comd_str);
         [gra, cont] = readvector(rootname(basename(imfile)));

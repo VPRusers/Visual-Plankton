@@ -1,4 +1,4 @@
-function [AlphaY, SVs, Bias, Parameters, nSV, nLabel] = LinearSVC(Samples, Labels,C)
+function [svm_model] = LinearSVC(Labels, Samples, C)
 % USAGES: 
 %    [AlphaY, SVs, Bias, Parameters, nSV, nLabel] = LinearSVC(Samples, Labels)
 %    [AlphaY, SVs, Bias, Parameters, nSV, nLabel] = LinearSVC(Samples, Labels,C)
@@ -35,9 +35,11 @@ if (nargin < 2) & (nargin > 3)
 else
    if (nargin <=2)
        Parameters = [0];
-       [AlphaY, SVs, Bias, Parameters, nSV, nLabel] = SVMTrain(Samples, Labels, Parameters);
+       %[AlphaY, SVs, Bias, Parameters, nSV, nLabel] = SVMTrain(Samples, Labels, Parameters);
+       svm_model = SVMTrain(Labels, Samples, Parameters);
    else 
        Parameters = [0 1 1 1 C];
-       [AlphaY, SVs, Bias, Parameters, nSV, nLabel] = SVMTrain(Samples, Labels, Parameters);
+       %[AlphaY, SVs, Bias, Parameters, nSV, nLabel] = SVMTrain(Samples, Labels, Parameters);
+       svm_model = SVMTrain(Labels, Samples, Parameters);
    end
 end

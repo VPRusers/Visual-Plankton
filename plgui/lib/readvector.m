@@ -69,6 +69,7 @@ if exist(f1)%&exist(f2)
             filename = [name, '.cont'];
             % Modified by C Davis for matlab R2010
             cont=load(filename);
+            
             delete(filename);
         else
             cont=0
@@ -84,4 +85,3 @@ else				% pbin failed
     cont = 0;
     bgr = 0;
 end
-

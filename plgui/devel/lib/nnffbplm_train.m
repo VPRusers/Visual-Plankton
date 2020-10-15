@@ -36,3 +36,4 @@ end
 [W1,b1,W2,b2,epochs,TR] = trainlm(W1,b1,'tansig',W2,b2,'purelin',x,T,tp);
 
 
+

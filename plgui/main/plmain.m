@@ -6,6 +6,7 @@
 
 % clear all
 % input data base
+
 h=gcbf;
 if ~isempty(h)
     h1=findobj(h,'Tag','Checkbox Classification');
@@ -47,12 +48,12 @@ globvar('GRA_LEN', 160);
 globvar('CONT_LEN', 256);
 globvar('GEO_LEN', 29);  
 cl_dir = [disc,filesep, cruise,filesep,'clpar',filesep];  
-if PASS_ID == 1,  name = 'dumyfile'; end
+%if PASS_ID == 1,  name = 'dumyfile'; end
 
 if cl_type==1,
     fname = [cl_dir,name,'dual.mat'];
-% elseif cl_type==2,
-%     fname = [cl_dir,name,'svm.mat'];
+elseif cl_type==2,
+    fname = [cl_dir,name,'svm.mat'];
 else
     fname = [cl_dir,name,'nn.mat'];
 end
@@ -62,6 +63,7 @@ if ~exist(fname,'file')
     fprintf('No Parameter File.  Aborting.\n');
     return;
 end
+
 com = ['load ', fname]
 eval(com);
 taxas=char(taxas);
@@ -100,14 +102,23 @@ for hour = sthour:endhour
         dos(['mkdir ', tefeature_dir]);
     end   
     startnum = 1;
-    cont = 1;%for realtime or post processing of more than one hour
-    %cont = 0;%for post processing of one hour at a time
+    %cont = 1;%for realtime or post processing of more than one hour
+    cont = 0;%for post processing of one hour at a time
     idle_count=0;
     %OLD WAY  [s,imfilesn] = dos(['dir /B ', rois_dirn]);
     %OLD WAY  [s,imfiles] = dos(['dir /B ', rois_dir]);
     %imfilesn = dosdir(rois_dirn);
     imfiles = dosdir(rois_dir);
     if size(imfiles,1) > 0                % there is data in this hour
+        if cl_type == 2 %added E. Chisholm May 2019 to avoid requirement of faxis_max (and other variables) when running svm model (does not include faxis_max)
+            faxis_max = NaN;
+            select_type = NaN;
+            t1 = NaN; t2 = NaN; t3 = NaN; t4 = NaN;
+            cl_method = NaN;
+            %x_mean = NaN;, x_std = NaN; %causing issues in feature
+            %normalization
+            mship = NaN;
+        end
         extractplbinchas2r(cl_dir,rois_dir,imfiles,tefeature_dir,faxis_max, select_type, ...
             t1, t2, t3, t4, cl_method, x_mean, x_std, taxas,dir_autoid, day, ...
             hour, clfid, mship, cl_type);

@@ -1,4 +1,4 @@
-function [conf] = mkconfusion7(feature_all, all_feature, trmx, taxas, cl_method, TNET, TP, PN)
+function [conf, conf_unkn] = mkconfusion7(feature_all, all_feature, trmx, taxas, cl_method, TNET, TP, PN, training_options)
 
 % Make a confusion matrix with leave-n-out method, where n is the number of
 % classes in the classifier. 
@@ -21,6 +21,8 @@ function [conf] = mkconfusion7(feature_all, all_feature, trmx, taxas, cl_method,
 disp(['Building Confusion Matrix']);
 
 conf=zeros(size(taxas,1),size(taxas,1));
+%create unknown tally
+conf_unkn=zeros(size(taxas,1),size(taxas,1));
 
 % Select features for NN classifier
 %note: that all_feature contains all of the original (shape-based) features
@@ -37,15 +39,15 @@ otrmx = trmx;
 trmx = trmx(1:end-1); 
 otr_num=sum(trmx(:));
 
-mtrmx=max(trmx);
-ctrmx=[1 cumsum(trmx)+1];
+mtrmx=max(trmx); %max sample size 
+ctrmx=[1 cumsum(trmx)+1]; %vector of size = taxas +1 , each element is sample size
 new_feature_all = [];
 new_all_feature = [];
 for j=1:length(trmx),
-    if trmx(j) == mtrmx,
+    if trmx(j) == mtrmx, %if sample size of taxa is equal to max sample size
         new_feature_all = [new_feature_all; feature_all(ctrmx(j):ctrmx(j+1)-1,:)];
         new_all_feature = [new_all_feature; all_feature(ctrmx(j):ctrmx(j+1)-1,:)];
-    else    
+    else    %if not, make up difference to create uniform sample size
         new_feature_all = [new_feature_all; feature_all(ctrmx(j):ctrmx(j+1)-1,:); ...
                 feature_all(ctrmx(j):ctrmx(j)+mtrmx-trmx(j)-1,:)];
         new_all_feature = [new_all_feature; all_feature(ctrmx(j):ctrmx(j+1)-1,:); ...
@@ -53,11 +55,10 @@ for j=1:length(trmx),
     end 
 end
 
-
-trmx=mtrmx*ones(size(trmx));
-tr_num=sum(trmx(:));
-ctrmx=[1 cumsum(trmx)+1];
-for k= 1:mtrmx,
+trmx=mtrmx*ones(size(trmx)); %uniform sample size for each taxa
+tr_num=sum(trmx(:)); % sum of sample sizes for total number of rois
+ctrmx=[1 cumsum(trmx)+1]; %cumulative sum vector of sample size , where element 2 equals last index of first taxa
+for k= 1:mtrmx,  %index through each roi 
     ind =1:tr_num;
     te_ind=k+ctrmx(1:end-1)-1;
     ind(te_ind)=[]; tr_ind=ind;
@@ -67,59 +68,97 @@ for k= 1:mtrmx,
     tr_feature = new_all_feature(tr_ind,:);
     tr_samples = new_feature_all(tr_ind,234:297);
    
-    temx=ones(size(trmx));
-    mx=trmx-temx;
+    temx=ones(size(trmx)); %creates array of ones, size of sample size vector
+    mx=trmx-temx; % -1 from each element of sample size vector
     
     %  Training NN classifier
-    
+    %training_t in plgui/devel/batch
+    %batches through different training function based on cl_method
+    %specified, outputs matrix of training data
     [t1,t2,t3,t4] = training_t(cl_method,tr_feature, TNET, TP, mx, PN);
-    %   if cl_method ==4, 
-    %     tr_correct =t3;
-    %     mship =member(t1, tr_feature, mx, mslen);
-    %   end
-    
-    nc =length(mx);
+  
+    nc =length(mx); %number of taxa
     labels = [];
     for j =1:nc;
-        labels=[labels; j*ones(mx(j),1)];
+        labels=[labels; j*ones(mx(j),1)]; %creates index array to label each taxa
     end
-    %  disp('training svm ...');
-%     [AlphaY, SVs, Bias, Parameters, nSV, nLabel] = LinearSVC(tr_samples', labels',50);
-    [AlphaY, SVs, Bias, Parameters, nSV, nLabel] = LinearSVC(tr_samples', labels');
+   
+    %combine default and selected features
+    %tr_featsamp = [tr_feature tr_samples];
+        %svm_model = mex_svmtrain(labels, tr_featsamp, training_options);
+
+    %run svm model from plgui/osu_svm (default)
+    svm_model = mex_svmtrain(labels, tr_samples, training_options);
     
     % classification with NN classifier
-    
+    %batches through NN classifier
     [aids, neuron] = ...
         clfier_batch_fast(te_feature, t1, t2, t3, t4, temx, cl_method);
+    %output: aids = actual ids of rois, neuron = class label
+    
     
     % classification with 2-svm 
-    %  sample = te_feature_all(234:297);
-    [Label, DecisionValue]= SVMClass(te_samples', AlphaY, SVs, Bias, Parameters, nSV, nLabel);
-    
- %   if Label ~=  aids, aids = -1;  end	
-    aids(aids~=Label')=size(taxas,1);
+   %combine selected and default
+   %te_featsamp = [te_feature te_samples];
+       %[Label, DecisionValue]= SVMClass(te_featsamp, svm_model);
+
+       %default
+    [Label, DecisionValue]= SVMClass(te_samples, svm_model);
+    %outputs: label = predicted labels, DecisionValue: the output of the 
+                %decision function (only meaningful for 2-class problem)
+
+
+%find disagreement between NN and SVM
+    aids_unkn = aids;
+    aids_unkn(aids == Label) = size(taxas,1);
+    aids(aids~=Label)=size(taxas,1);
     hids = geneids(temx);
     
- %   if aids<=0, aids=size(taxas,1); end
+    
+
+    %create Conf Mat for all taxas 
+    % (not including unknown/other)
     for kk=1:length(aids),
        conf(aids(kk),hids(kk))=conf(aids(kk),hids(kk))+1;
+       %creates a confusion matrix for unknown samples
+       conf_unkn(aids_unkn(kk), Label(kk)) = conf(aids_unkn(kk),Label(kk))+1;
     end   
     disp(['Completed ' int2str(k) ' of ' int2str(mtrmx)]);
 end
 
+
+
+
 % Test on the 'other' samples
 
 te_feature = all_feature(otr_num+1:sum(otrmx),:);
-%temx = otrmx - [trmx 0];
+
 temx = zeros(size(otrmx)); temx(end)=otrmx(end);
 te_samples = feature_all(otr_num+1:sum(otrmx),234:297);
+
+%test with NN
 [aids, neuron] = ...
     clfier_batch_fast(te_feature, t1, t2, t3, t4, temx, cl_method);
-[Labels, DecisionValue]= SVMClass(te_samples', AlphaY, SVs, Bias, Parameters, nSV, nLabel);
-aids(aids ~= Labels') = size(taxas,1);  
+
+%test with SVM (default)
+[Label, DecisionValue]= SVMClass(te_samples, svm_model);
+%combine default and selected
+%te_featsamp = [te_feature te_samples];
+%[Label, DecisionValue]= SVMClass(te_featsamp, svm_model);
+
+%test disagreement on 'other' samples
+%for classified samples and unknown group
+aids_unkn = aids;
+aids_unkn(aids == Label) = size(taxas,1);
+aids(aids ~= Label) = size(taxas,1);
 hids = geneids(temx);
+%create conf mat for other samples (known and unknown)
 conf_tmp = confusion(hids, aids);
+conf_tmp_unkn = confusion(Label, aids_unkn);
+
+%combine conf mat for all taxas and other samples
 conf =conf+conf_tmp;
+conf_unkn = conf_unkn+conf_tmp_unkn;
 
 
 

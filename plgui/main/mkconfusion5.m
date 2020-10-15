@@ -1,4 +1,4 @@
-function [conf] = mkconfusion5(feature_all, all_feature, trmx, taxas, cl_method, TNET, TP, PN)
+function [conf] = mkconfusion5(feature_all, all_feature, trmx, taxas, cl_method, TNET, TP, PN, training_options)
 
 % Main program for make confusion matrix with leave-one-out method.
 % It is similar to mkconfusion2.m except you could select certain
@@ -64,7 +64,9 @@ for i= 1:tr_num
         labels=[labels; j*ones(mx(j),1)];
     end
     %  disp('training svm ...');
-    [AlphaY, SVs, Bias, Parameters, nSV, nLabel] = LinearSVC(tr_samples', labels',50);
+    %[AlphaY, SVs, Bias, Parameters, nSV, nLabel] = LinearSVC(tr_samples', labels',50); %edit to default value of 1 to test (orig C = 50) no change
+    %KS workaround for svm model
+    svm_model = mex_svmtrain(labels, tr_samples, training_options);
     
     % classification with NN classifier
     
@@ -73,12 +75,17 @@ for i= 1:tr_num
     
     % classification with 2-svm 
     %  sample = te_feature_all(234:297);
-    [Label, DecisionValue]= SVMClass(te_samples', AlphaY, SVs, Bias, Parameters, nSV, nLabel);
+    %[Label, DecisionValue]= SVMClass(te_samples', AlphaY, SVs, Bias, Parameters, nSV, nLabel);
+    %KS workaround for svm model
+    [Label, DecisionValue]= SVMClass(te_samples, svm_model);
     
-    if Label ~=  aids, aids = -1;  end	
-    hids = geneids(temx);
     
-    if aids<=0, aids=size(taxas,1); end
+    if Label ~=  aids, aids = -1;  end	%ec
+    hids = geneids(temx); %ec
+    
+    
+    
+    if aids<=0, aids=size(taxas,1); end %ec
     conf(aids,hids)=conf(aids,hids)+1;
     disp(['Completed ' int2str(i) ' of ' int2str(tr_num)]);
 end
@@ -90,8 +97,11 @@ temx = otrmx - [trmx 0];
 te_samples = feature_all(tr_num+1:sum(otrmx),234:297);
 [aids, neuron] = ...
     clfier_batch_fast(te_feature, t1, t2, t3, t4, temx, cl_method);
-[Labels, DecisionValue]= SVMClass(te_samples', AlphaY, SVs, Bias, Parameters, nSV, nLabel);
-aids(aids ~= Labels') = size(taxas,1);  
+%[Labels, DecisionValue]= SVMClass(te_samples', AlphaY, SVs, Bias, Parameters, nSV, nLabel);
+[Label, DecisionValue]= SVMClass(te_samples, svm_model); %KS workaround from mk7
+
+%aids(aids ~= Labels') = size(taxas,1);  
+aids(aids ~= Label) = size(taxas,1); %KS edit from mk7
 hids = geneids(temx);
 conf_tmp = confusion(hids, aids);
 conf =conf+conf_tmp;
